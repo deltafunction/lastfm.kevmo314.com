@@ -31,10 +31,11 @@ th {
 	padding:0 20px;
 }
 #header {
-	background:#000 url(header.jpg) top left repeat-x;
+	background:#c3000b top left repeat-x;
 	color:#FFF;
 	height:43px;
-	padding-top:5px;
+	padding-top:10px;
+	margin-top:24px;
 	text-shadow:0px 2px 3px #555;
 }
 #content {
@@ -42,6 +43,9 @@ th {
 	background-color:#F7F7F7;
 	border:1px solid #999;
 	border-top:none;
+}
+.right {
+	float: right;
 }
 #results {
 	width:100%;

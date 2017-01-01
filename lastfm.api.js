@@ -8,7 +8,7 @@ function LastFM(options){
 	/* Set default values for required options. */
 	var apiKey    = options.apiKey    || '';
 	var apiSecret = options.apiSecret || '';
-	var apiUrl    = options.apiUrl    || 'https://ws.audioscrobbler.com/2.0/';
+	var apiUrl    = options.apiUrl    || 'http://ws.audioscrobbler.com/2.0/';
 	var cache     = options.cache     || undefined;
 
 	/* Set API key. */
@@ -32,7 +32,13 @@ function LastFM(options){
 	};
 
 	/* Internal call (POST, GET). */
-	var internalCall = function(params, callbacks, requestMethod){
+	var internalCall = function(params, callbacks, requestMethod, _apiUrl){
+		if(typeof _apiUrl !== 'undefined'){
+			url = _apiUrl;
+		}
+		else{
+			url = apiUrl;
+		}
 		/* Cross-domain POST request (doesn't return any data, always successful). */
 		if(requestMethod == 'POST'){
 			/* Create iframe element to post data. */
@@ -71,7 +77,7 @@ function LastFM(options){
 			/* Open iframe document and write a form. */
 			doc.open();
 			doc.clear();
-			doc.write('<form method="post" action="' + apiUrl + '" id="form">');
+			doc.write('<form method="post" action="' + url + '" id="form">');
 
 			/* Write POST parameters as input fields. */
 			for(var param in params){
@@ -107,9 +113,10 @@ function LastFM(options){
 			/* Set callback name and response format. */
 			params.callback = jsonp;
 			params.format   = 'json';
-
+			
 			/* Create JSONP callback function. */
 			window[jsonp] = function(data){
+				
 				/* Is a cache available?. */
 				if(typeof(cache) != 'undefined'){
 					var expiration = cache.getExpirationTime(params);
@@ -144,7 +151,7 @@ function LastFM(options){
 					head.removeChild(script);
 				}
 			};
-
+			
 			/* Create script element to load JSON data. */
 			var head   = document.getElementsByTagName("head")[0];
 			var script = document.createElement("script");
@@ -157,8 +164,8 @@ function LastFM(options){
 			}
 
 			/* Set script source. */
-			script.src = apiUrl + '?' + array.join('&').replace(/%20/g, '+');
-
+			script.src = url + '?' + array.join('&').replace(/%20/g, '+');
+			
 			/* Append script element. */
 			head.appendChild(script);
 		}
@@ -177,6 +184,44 @@ function LastFM(options){
 
 		/* Call method. */
 		internalCall(params, callbacks, requestMethod);
+	};
+	
+	this.spotify_call = function(method, params, callbacks, requestMethod, artist, album, track){
+		/* Set default values. */
+		params        = params        || {};
+		callbacks     = callbacks     || {};
+		requestMethod = requestMethod || 'GET';
+		spotifyApiUrl = 'http://api.spotify.com/v1/search?type=track&q=artist:'+
+			artist+'+album:'+album+'+track:'+track;
+
+		/* Add parameters. */
+		params.method  = method;
+		params.api_key = apiKey;
+
+		/* Call method. */
+		internalCall(params, callbacks, requestMethod, spotifyApiUrl);
+	};
+	
+	var neighbours_call = function(method, params, callbacks){
+		/* Set default values. */
+		params        = params        || {};
+		callbacks     = callbacks     || {};
+		requestMethod = 'GET';
+		neighboursApiUrl = 'http://localhost/lastfm/neighbours.php';
+
+		/* Call method. */
+		internalCall(params, callbacks, requestMethod, neighboursApiUrl);
+	};
+	
+	var spotify_playlist_call = function(method, params, callbacks){
+		/* Set default values. */
+		params        = params        || {};
+		callbacks     = callbacks     || {};
+		requestMethod = 'GET';
+		neighboursApiUrl = 'http://localhost/lastfm/playlist.php';
+
+		/* Call method. */
+		internalCall(params, callbacks, requestMethod, neighboursApiUrl);
 	};
 
 	/* Signed method call. */
@@ -515,11 +560,11 @@ function LastFM(options){
 
 		getArtists : function(params, callbacks){
 			call('library.getArtists', params, callbacks);
-		},
+		}/*,
 
 		getTracks : function(params, callbacks){
 			call('library.getTracks', params, callbacks);
-		}
+		}*/
 	};
 
 	/* Playlist methods. */
@@ -726,7 +771,11 @@ function LastFM(options){
 		},
 
 		getNeighbours : function(params, callbacks){
-			call('user.getNeighbours', params, callbacks);
+			neighbours_call('user.getNeighbours', params, callbacks);
+		},
+		
+		getSpotifyPlaylist : function(params, callbacks){
+			spotify_playlist_call('user.getPlaylist', params, callbacks);
 		},
 
 		getNewReleases : function(params, callbacks){
