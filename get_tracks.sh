@@ -26,6 +26,10 @@ loved="1"
 popular="0"
 library="1"
 
+sampleTracks="yes"
+tracksOut=30
+tmpPage="page.html"
+
 while [ $# -ge 1 ]; do
 	case "$1" in
                 -u|--username)
@@ -73,14 +77,25 @@ if [ -z "$username" ]; then
 	exit 1
 fi
 
+rm $tmpPage
 
+phantomjs $SCRIPTPATH/get_page.js $username $tracks $algorithm $loved $popular $library | \
+grep -v 'LOG: ' > $tmpPage
+
+tracksNum=`cat $tmpPage | sed 's|<tr|\n<tr|g' | grep -E '^<tr ' | wc -l`
+if [ $tracksNum -gt $tracksOut ]; then
+	tracksRemainder=$(( tracksNum % tracksOut ))
+	tracksQuotient=$(( (tracksNum-tracksRemainder) / tracksOut ))
+fi
 
 i=0
 echo -n "["
-#cat page.html | \
-phantomjs $SCRIPTPATH/get_page.js $username $tracks $algorithm $loved $popular $library | \
-grep -v 'LOG: ' | sed 's|<tr|\n<tr|g' | grep -E '^<tr ' | \
+cat $tmpPage | sed 's|<tr|\n<tr|g' | grep -E '^<tr ' | \
 while read line; do
+	if [ "$sampleTracks" == "yes" -a $(( i % tracksQuotient )) -ne 0 ]; then
+		i=$((i+1))
+		continue
+	fi
 	artist=`echo $line | sed -r 's|.*/([^/]+)/_/([^/^"]+)".*|\1|' | sed 's|\+| |g' | awk '{print tolower($0)}'`
 	track=`echo $line | sed -r 's|.*/([^/]+)/_/([^/^"]+)".*|\2|'`
 	#echo -n "Finding track $track by $artist" >&2
