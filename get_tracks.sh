@@ -77,11 +77,12 @@ if [ -z "$username" ]; then
 	exit 1
 fi
 
-rm $tmpPage
+ls $tmpPage >& /dev/null && rm $tmpPage
 
 phantomjs $SCRIPTPATH/get_page.js $username $tracks $algorithm $loved $popular $library | \
 grep -v 'LOG: ' > $tmpPage
 
+tracksQuotient=1
 tracksNum=`cat $tmpPage | sed 's|<tr|\n<tr|g' | grep -E '^<tr ' | wc -l`
 if [ $tracksNum -gt $tracksOut ]; then
 	tracksRemainder=$(( tracksNum % tracksOut ))
