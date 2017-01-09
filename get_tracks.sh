@@ -93,10 +93,14 @@ i=0
 echo -n "["
 cat $tmpPage | sed 's|<tr|\n<tr|g' | grep -E '^<tr ' | \
 while read line; do
+	## This does sparse sampling, but since the result has already been randomized, it seems redundant
 	if [ "$sampleTracks" == "yes" -a $(( i % tracksQuotient )) -ne 0 ]; then
 		i=$((i+1))
 		continue
 	fi
+	#if [ "$sampleTracks" == "yes" -a $i -gt $tracksOut ]; then
+	#	continue
+	#fi
 	artist=`echo $line | sed -r 's|.*/([^/]+)/_/([^/^"]+)".*|\1|' | sed 's|\+| |g' | awk '{print tolower($0)}'`
 	track=`echo $line | sed -r 's|.*/([^/]+)/_/([^/^"]+)".*|\2|'`
 	#echo -n "Finding track $track by $artist" >&2

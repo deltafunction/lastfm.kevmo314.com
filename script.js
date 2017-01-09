@@ -1,4 +1,5 @@
 var minSampleSize = 5;
+var sampleSize = 20;
 
 function getParam(href, key) {
 	var results = new RegExp('[\?&]' + key + '=([^&#]*)').exec(href);
@@ -90,7 +91,7 @@ $(document).ready(function() {
 			} else if(algorithm == "Neighbours") {
 				$progressText.text("Finding neighbours...");
 				lastfm.user.getNeighbours({user:username}, {success:function(data) {
-					shuffle(data);
+					//shuffle(data);
 					$.each(data, function(i, user) {
 						//renderMessage('highlight', "Neighbour "+i+":"+user);
 						if(i < trackCount) {
@@ -151,6 +152,7 @@ $(document).ready(function() {
 					}
 					addSimilarToChart(localLibrary[i], localLibrary);
 				}
+				shuffle(localLibrary);
 			}
 		});
 		return false;
@@ -330,8 +332,8 @@ $(document).ready(function() {
 		return signatureHashes[(trackObject.name + trackObject.artist.name)];
 	}
 	function addSimilarToChart(metadata, localLibrary) {
-		sampleSize = +(trackCount);
-		superSampleSize = 5 * sampleSize;
+		//sampleSize = +(trackCount);
+		superSampleSize = 3 * sampleSize;
 		lastfm.track.getSimilar({artist:metadata.artist, track:metadata.track,
 			limit:superSampleSize, autocorrect:1},
 			{success:function(data) {
@@ -362,8 +364,8 @@ $(document).ready(function() {
 	}
 	function addUserToChart(user, localLibrary) {
 		getTrackCount(username).done(function(tracksCount) {
-			sampleSize = +(trackCount);
-			superSampleSize = (tracksCount <= 5 * sampleSize) ? tracksCount : (5 * sampleSize);
+			//sampleSize = +(trackCount);
+			superSampleSize = (tracksCount >= 3 * sampleSize) ? tracksCount : (3 * sampleSize);
 			pages = Math.round(tracksCount / superSampleSize);
 			page = Math.ceil(Math.random() * pages);
 			getTracks({user:user.name, limit:superSampleSize, page: page}, {success:function(data) {
