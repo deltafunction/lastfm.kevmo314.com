@@ -438,31 +438,54 @@ $(document).ready(function() {
 		clearMessage();
 	});
 	
+	function resolveTracks(tracks, urls, index, len){
+		renderMessage('highlight','Resolving '+sampleSize+' tracks');
+		var end;
+		var stop = false;
+		if(index+sampleSize>=len){
+			end = len;
+			stop = true;
+		}
+		else{
+			end = index+sampleSize;
+		}
+		var tmpTracks = [];
+		for(index; index<end; ++index){
+			tmpTracks.push(tracks[index]);
+		}
+		lastfm.user.getSpotifyPlaylist({tracks:JSON.stringify(tmpTracks)}, {
+			success:function(data) {
+				urls = urls.concat(data);
+				if(stop){
+					//$progressText.text("");
+					//$progressValue.text("");
+					renderMessage('highlight','Tracks resolved: '+urls.length+' of '+tracks.length);
+					alert(urls.toSource());
+				}
+				else{
+					resolveTracks(tracks, urls, index, len);
+				}
+			},
+			error:function(code, message){
+				renderError(message);
+				finish();
+		}});
+	}
+	
 	$('#get_spotify_playlist').click(function(ev){
 		var tracks = [];
-		var i = 0;
+		var urls = [];
+		var len = $('tr').length;
+		var index = 0 ;
 		$('tr').each(function(el){
-			if(i>20){
-				renderMessage('highlight','Truncating to 20');
-				return false;
-			}
 			if($(this).find('td.name').text()){
 				var track = new Object();
 				track.title = $(this).find('td.name').text();
 				track.artist = $(this).find('td.artist').text();
 				tracks.push(track);
 			}
-			++i;
 		});
-		renderMessage('highlight','Finding tracks...');
-		lastfm.user.getSpotifyPlaylist({tracks:JSON.stringify(tracks)}, {success:function(data) {
-			$progressText.text("");
-			$progressValue.text("");
-			alert(data.toSource());
-		}, error:function(code, message){
-			renderError(message);
-			finish();
-		}});
+		resolveTracks(tracks, urls, index, len);
 	});
 	
 	$('#get_spotify_playlist').hide();
