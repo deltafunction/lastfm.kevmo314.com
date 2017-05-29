@@ -30,6 +30,12 @@ sampleTracks="yes"
 tracksOut=30
 tmpPage="page.html"
 
+# Spotify application client id and secret, from
+# https://developer.spotify.com/my-applications/
+
+client_token=`echo -ne 315ea12ceee14b3fb63d4fd17a2684e0:c5f080e6586d4906942bcfd499059803 | base64 -w 0`
+spotify_token=`curl -H "Authorization: Basic $client_token" -d "grant_type=client_credentials" "https://accounts.spotify.com/api/token" | jq -r .access_token`
+
 while [ $# -ge 1 ]; do
 	case "$1" in
                 -u|--username)
@@ -104,7 +110,7 @@ while read line; do
 	artist=`echo $line | sed -r 's|.*/([^/]+)/_/([^/^"]+)".*|\1|' | sed 's|\+| |g' | awk '{print tolower($0)}'`
 	track=`echo $line | sed -r 's|.*/([^/]+)/_/([^/^"]+)".*|\2|'`
 	#echo -n "Finding track $track by $artist" >&2
-	url=`curl -X GET "https://api.spotify.com/v1/search?q=$track&type=track" 2>/dev/null | \
+	url=`curl -H "Authorization: Bearer $spotify_token" -X GET "https://api.spotify.com/v1/search?q=$track&type=track" 2>/dev/null | \
 	jq ".tracks.items[] | select(.artists[].name | ascii_downcase | contains(\"$artist\")) | .uri" | head -1`
 	if [ -n "$url" ]; then
 		if [ $i -ne 0 ];then
